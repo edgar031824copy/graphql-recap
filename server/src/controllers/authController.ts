@@ -18,7 +18,7 @@ export const loginController = async (req: Request, res: Response) => {
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
-  const token = jwt.sign({ sub: user.id, email: user.email }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+  const token = jwt.sign({ sub: user.id, email: user.email, companyId: user.companyId }, process.env.JWT_SECRET!, { expiresIn: '7d' });
   // Set the token as an httpOnly cookie — the client never touches it directly
   res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
   // Only return the email so the UI knows who is logged in

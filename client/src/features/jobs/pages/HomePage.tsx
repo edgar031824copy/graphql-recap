@@ -3,15 +3,32 @@ import { Link } from "react-router-dom";
 import { useJobs } from "../api/useJobs.ts";
 import { useDeleteJob } from "../api/useDeleteJob.ts";
 import TrashIcon from "../components/TrashIcon.tsx";
+import { useAuth } from "../../auth/context/AuthContext.tsx";
+import type { ApolloError } from "@apollo/client";
+
+type CardError = { id: string; message: string };
+
+function getGraphQLMessage(err: unknown): string {
+  const apolloErr = err as ApolloError;
+  return apolloErr?.graphQLErrors?.[0]?.message ?? "Something went wrong";
+}
 
 export default function HomePage() {
+  const { user } = useAuth();
   const { jobs, isLoadingJobs, error } = useJobs();
   const { deleteJob, isDeletingJob } = useDeleteJob();
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [cardError, setCardError] = useState<CardError | null>(null);
 
   const handleDelete = async (id: string) => {
-    await deleteJob(id);
-    setConfirmId(null);
+    try {
+      await deleteJob(id);
+      setConfirmId(null);
+    } catch (err) {
+      setConfirmId(null);
+      setCardError({ id, message: getGraphQLMessage(err) });
+      setTimeout(() => setCardError(null), 4000);
+    }
   };
 
   if (isLoadingJobs) {
@@ -47,12 +64,14 @@ export default function HomePage() {
             {jobs.length} job{jobs.length !== 1 ? "s" : ""} available
           </p>
         </div>
-        <Link
-          to="/jobs/new"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors text-sm"
-        >
-          Post a Job
-        </Link>
+        {user && (
+          <Link
+            to="/jobs/new"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors text-sm"
+          >
+            Post a Job
+          </Link>
+        )}
       </header>
 
       {jobs.length === 0 ? (
@@ -93,31 +112,52 @@ export default function HomePage() {
                     })}
                   </time>
 
-                  {confirmId === job.id ? (
-                    <div className="flex items-center gap-1.5">
+                  {user &&
+                    (cardError?.id === job.id ? (
+                      // Inline error pill — replaces the action buttons on this card
+                      <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 border border-red-100 px-2.5 py-1.5 rounded-lg">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="8" x2="12" y2="12" />
+                          <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        {cardError.message}
+                      </div>
+                    ) : confirmId === job.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleDelete(job.id)}
+                          disabled={isDeletingJob}
+                          className="text-xs bg-red-500 hover:bg-red-600 text-white px-2.5 py-1 rounded-lg font-medium transition-colors disabled:opacity-50"
+                        >
+                          {isDeletingJob ? "…" : "Confirm"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmId(null)}
+                          className="text-xs text-slate-400 hover:text-slate-700 px-2 py-1 rounded-lg transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
                       <button
-                        onClick={() => handleDelete(job.id)}
-                        disabled={isDeletingJob}
-                        className="text-xs bg-red-500 hover:bg-red-600 text-white px-2.5 py-1 rounded-lg font-medium transition-colors disabled:opacity-50"
+                        onClick={() => setConfirmId(job.id)}
+                        className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-all p-1.5 rounded-lg hover:bg-red-50"
+                        aria-label={`Delete ${job.title}`}
                       >
-                        {isDeletingJob ? "…" : "Confirm"}
+                        <TrashIcon />
                       </button>
-                      <button
-                        onClick={() => setConfirmId(null)}
-                        className="text-xs text-slate-400 hover:text-slate-700 px-2 py-1 rounded-lg transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmId(job.id)}
-                      className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-all p-1.5 rounded-lg hover:bg-red-50"
-                      aria-label={`Delete ${job.title}`}
-                    >
-                      <TrashIcon />
-                    </button>
-                  )}
+                    ))}
                 </div>
               </article>
             </li>

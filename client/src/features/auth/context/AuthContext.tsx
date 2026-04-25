@@ -1,14 +1,20 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { fetchMe } from '../api/me.ts';
-import { logoutRequest } from '../api/logout.ts';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { fetchMe } from "../api/me.ts";
+import { logoutRequest } from "../api/logout.ts";
 
 type AuthUser = { email: string };
 
 type AuthContextType = {
   user: AuthUser | null;
-  isInitializing: boolean;  // true while the /me check is in-flight on page load
+  isInitializing: boolean; // true while the /me check is in-flight on page load
   login: (email: string) => void;
-  logout: () => Promise<void>;
+  logout: (redirectTo?: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -30,10 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (email: string) => setUser({ email });
 
-  const logout = async () => {
-    // Tell the server to clear the cookie first, then clear local state
+  const logout = async (redirectTo = "/") => {
     await logoutRequest();
-    setUser(null);
+    // Hard redirect instead of setUser(null) + navigate():
+    window.location.href = redirectTo;
   };
 
   return (
@@ -45,6 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 }

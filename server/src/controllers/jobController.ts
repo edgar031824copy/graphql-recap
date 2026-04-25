@@ -2,8 +2,6 @@ import { GraphQLError } from "graphql";
 import * as jobModel from "../models/jobModel.js";
 import { findCompanyById } from "../models/companyModel.js";
 
-// TypeScript assertion helper: narrows `userId` to `string` or throws UNAUTHENTICATED.
-// Using `asserts` means TS knows userId is a non-null string after this call.
 function requireAuth(userId: string | null): asserts userId is string {
   if (!userId)
     throw new GraphQLError("Not authenticated", {
@@ -11,9 +9,14 @@ function requireAuth(userId: string | null): asserts userId is string {
     });
 }
 
-export const getJobs = () => {
-  return jobModel.findJobs();
-};
+function requireOwnership(jobCompanyId: string, userCompanyId: string) {
+  if (jobCompanyId !== userCompanyId)
+    throw new GraphQLError("You can only manage jobs from your own company", {
+      extensions: { code: "FORBIDDEN" },
+    });
+}
+
+export const getJobs = () => jobModel.findJobs();
 
 export const getJobById = async (id: string) => {
   const job = await jobModel.findJobById(id);
@@ -32,8 +35,10 @@ export const createJob = async (
   description: string | undefined,
   companyId: string,
   userId: string | null,
+  userCompanyId: string | null,
 ) => {
   requireAuth(userId);
+  requireOwnership(companyId, userCompanyId!);
   const company = await findCompanyById(companyId);
   if (!company)
     throw new GraphQLError("Company not found", {
@@ -42,13 +47,14 @@ export const createJob = async (
   return jobModel.insertJob(title, description, companyId);
 };
 
-export const deleteJob = async (id: string, userId: string | null) => {
+export const deleteJob = async (id: string, userId: string | null, userCompanyId: string | null) => {
   requireAuth(userId);
   const job = await jobModel.findJobById(id);
   if (!job)
     throw new GraphQLError("Job not found", {
       extensions: { code: "NOT_FOUND" },
     });
+  requireOwnership(job.companyId, userCompanyId!);
   return jobModel.removeJob(id);
 };
 
@@ -56,6 +62,7 @@ export const updateJob = async (
   id: string,
   data: { title?: string; description?: string },
   userId: string | null,
+  userCompanyId: string | null,
 ) => {
   requireAuth(userId);
   const job = await jobModel.findJobById(id);
@@ -63,5 +70,6 @@ export const updateJob = async (
     throw new GraphQLError("Job not found", {
       extensions: { code: "NOT_FOUND" },
     });
+  requireOwnership(job.companyId, userCompanyId!);
   return jobModel.patchJob(id, data);
 };
