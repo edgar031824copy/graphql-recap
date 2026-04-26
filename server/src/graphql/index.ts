@@ -5,7 +5,7 @@ import { jobResolver } from './resolvers/job/jobResolver.js';
 import { companyResolver } from './resolvers/company/companyResolver.js';
 
 // Shared context type — available in every resolver as the third argument
-export type GraphQLContext = { userId: string | null };
+export type GraphQLContext = { userId: string | null; companyId: string | null };
 
 const baseSchema = `#graphql
   type Query

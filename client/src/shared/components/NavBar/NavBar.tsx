@@ -23,7 +23,7 @@ export default function NavBar() {
                 Post a Job
               </Link>
               <button
-                onClick={logout}
+                onClick={() => logout()}
                 className="text-sm text-slate-400 hover:text-white transition-colors"
               >
                 Logout

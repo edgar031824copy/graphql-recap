@@ -31,12 +31,12 @@ async function bootstrap() {
       // Returning null userId is not an error — unprotected queries still work fine.
       context: async ({ req }): Promise<GraphQLContext> => {
         const token = req.cookies?.token;
-        if (!token) return { userId: null };
+        if (!token) return { userId: null, companyId: null };
         try {
-          const payload = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
-          return { userId: payload.sub };
+          const payload = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string; companyId: string };
+          return { userId: payload.sub, companyId: payload.companyId };
         } catch {
-          return { userId: null };
+          return { userId: null, companyId: null };
         }
       },
     }),

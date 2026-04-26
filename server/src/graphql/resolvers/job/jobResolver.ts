@@ -12,17 +12,17 @@ export const jobResolver = {
       _: unknown,
       { input }: { input: { title: string; description?: string; companyId: string } },
       context: GraphQLContext,
-    ) => jobController.createJob(input.title, input.description, input.companyId, context.userId),
+    ) => jobController.createJob(input.title, input.description, input.companyId, context.userId, context.companyId),
     deleteJob: (
       _: unknown,
       { id }: { id: string },
       context: GraphQLContext,
-    ) => jobController.deleteJob(id, context.userId),
+    ) => jobController.deleteJob(id, context.userId, context.companyId),
     updateJob: (
       _: unknown,
       { id, input }: { id: string; input: { title?: string; description?: string } },
       context: GraphQLContext,
-    ) => jobController.updateJob(id, input, context.userId),
+    ) => jobController.updateJob(id, input, context.userId, context.companyId),
   },
   Job: {
     date: (job: { date: Date }) => job.date.toISOString(),
