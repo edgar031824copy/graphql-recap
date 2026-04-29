@@ -1,38 +1,52 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCreateJob } from '../api/useCreateJob.ts';
-import { useCompanies } from '../../companies/api/useCompanies.ts';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCreateJob } from "../api/useCreateJob.ts";
+import { useCompanies } from "../../companies/api/useCompanies.ts";
 
 export default function CreateJobPage() {
   const navigate = useNavigate();
   const { createJob, isCreatingJob, error } = useCreateJob();
   const { companies, isLoadingCompanies } = useCompanies();
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [companyId, setCompanyId] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [companyId, setCompanyId] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createJob({ title, description: description || undefined, companyId });
-    navigate('/');
+    await createJob({
+      title,
+      description: description || undefined,
+      companyId,
+    });
+    navigate("/");
   };
 
   return (
     <div className="max-w-2xl">
       <h1 className="text-3xl font-bold text-slate-900 mb-2">Post a New Job</h1>
-      <p className="text-slate-500 mb-8">Fill in the details below to publish your listing.</p>
+      <p className="text-slate-500 mb-8">
+        Fill in the details below to publish your listing.
+      </p>
 
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <p role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">
+            <p
+              role="alert"
+              className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm"
+            >
               {error.message}
             </p>
           )}
 
           <div>
-            <label htmlFor="company" className="block text-sm font-medium text-slate-700 mb-1.5">Company</label>
+            <label
+              htmlFor="company"
+              className="block text-sm font-medium text-slate-700 mb-1.5"
+            >
+              Company
+            </label>
             <select
               id="company"
               required
@@ -43,13 +57,20 @@ export default function CreateJobPage() {
             >
               <option value="">Select a company…</option>
               {companies.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1.5">Job Title</label>
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-slate-700 mb-1.5"
+            >
+              Job Title
+            </label>
             <input
               id="title"
               type="text"
@@ -62,8 +83,12 @@ export default function CreateJobPage() {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Description <span className="text-slate-400 font-normal">(optional)</span>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-slate-700 mb-1.5"
+            >
+              Description{" "}
+              <span className="text-slate-400 font-normal">(optional)</span>
             </label>
             <textarea
               id="description"
@@ -81,11 +106,11 @@ export default function CreateJobPage() {
               disabled={isCreatingJob}
               className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
             >
-              {isCreatingJob ? 'Publishing…' : 'Publish Job'}
+              {isCreatingJob ? "Publishing…" : "Publish Job"}
             </button>
             <button
               type="button"
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="text-slate-600 hover:text-slate-900 px-6 py-2.5 rounded-lg font-medium transition-colors"
             >
               Cancel
